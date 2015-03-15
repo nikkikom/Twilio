@@ -8,7 +8,7 @@
 namespace xxx {
 
 template<typename... Elements>
-_constexpr std::tuple<typename std::decay<Elements>::type...>
+constexpr std::tuple<typename std::decay<Elements>::type...>
 make_tuple(Elements&&... args)
 {
   typedef std::tuple<typename std::decay<Elements>::type...> result_type;
@@ -16,7 +16,7 @@ make_tuple(Elements&&... args)
 }
 
 template<typename... Elements>
-_constexpr std::tuple<Elements&&...>
+constexpr std::tuple<Elements&&...>
 forward_as_tuple(Elements&&... args) noexcept
 { return std::tuple<Elements&&...> (std::forward<Elements>(args)...); }
 

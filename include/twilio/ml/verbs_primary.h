@@ -16,11 +16,11 @@ class base
 {
 	bool empty_;
 
-	_constexpr Derived const* derived () const noexcept
+	constexpr Derived const* derived () const noexcept
   { return static_cast<Derived const*> (this); }
 
   template <class Ch, class Tr>
-  friend _constexpr std::basic_ostream<Ch,Tr>&
+  friend constexpr std::basic_ostream<Ch,Tr>&
   print (std::basic_ostream<Ch,Tr>& os, base const& b)
   {
   	return b.derived ()->print_end (
@@ -30,7 +30,7 @@ class base
 
   // This operator should not be called, an error will always be triggered.
   template <class Ch, class Tr>
-  friend _constexpr std::basic_ostream<Ch,Tr>&
+  friend constexpr std::basic_ostream<Ch,Tr>&
   operator<< (std::basic_ostream<Ch,Tr>& os, base const& b)
   {
   	static_assert (!std::is_same<base,base>::value, 
@@ -39,12 +39,12 @@ class base
   }
 
 public:
-  _constexpr base (bool empty = true) noexcept : empty_ (empty) {}
+  constexpr base (bool empty = true) noexcept : empty_ (empty) {}
 
-	_constexpr bool empty () const noexcept { return empty_; }
+	constexpr bool empty () const noexcept { return empty_; }
 
   template <class Ch, class Tr>
-  _constexpr std::basic_ostream<Ch,Tr>&
+  constexpr std::basic_ostream<Ch,Tr>&
   print_begin (std::basic_ostream<Ch,Tr>& os) const
   {
   	return derived ()->print_attrs (os << '<' << derived ()->name ()) 
@@ -52,7 +52,7 @@ public:
   }
 
   template <class Ch, class Tr>
-  _constexpr std::basic_ostream<Ch,Tr>&
+  constexpr std::basic_ostream<Ch,Tr>&
   print_end (std::basic_ostream<Ch,Tr>& os) const
   {
   	return derived ()->empty () ? os : 
@@ -60,14 +60,14 @@ public:
   }
 
   template <class Ch, class Tr>
-  _constexpr std::basic_ostream<Ch,Tr>&
+  constexpr std::basic_ostream<Ch,Tr>&
   print_attrs (std::basic_ostream<Ch,Tr>& os) const noexcept
   {
   	return os;
   }
 
   template <class Ch, class Tr>
-  _constexpr std::basic_ostream<Ch,Tr>&
+  constexpr std::basic_ostream<Ch,Tr>&
   print_content (std::basic_ostream<Ch,Tr>& os) const noexcept
   {
   	return os;
@@ -79,12 +79,12 @@ template <class Base>
 struct not_empty: public Base 
 {
   using Base::Base;
-  _constexpr not_empty (Base const& base) : Base (base) {}
-  _constexpr not_empty (Base && base) : Base (std::move (base)) {}
+  constexpr not_empty (Base const& base) : Base (base) {}
+  constexpr not_empty (Base && base) : Base (std::move (base)) {}
 };
 
 template <class Base>
-_constexpr not_empty<typename std::decay<Base>::type>
+constexpr not_empty<typename std::decay<Base>::type>
 set_not_empty (Base&& base)
 {
 	typedef typename std::decay<Base>::type _Base;
@@ -95,13 +95,13 @@ set_not_empty (Base&& base)
 
 struct Response: base<Response>, node_tag
 {
-	_constexpr Response (not_empty<Response> const& x) noexcept 
+	constexpr Response (not_empty<Response> const& x) noexcept 
 	  : base<Response> (false) {}
 
-	_constexpr Response (bool empty = true) noexcept : base<Response> (empty) 
+	constexpr Response (bool empty = true) noexcept : base<Response> (empty) 
 	{}
 
-	_constexpr char const* name () const noexcept { return "Response"; }
+	constexpr char const* name () const noexcept { return "Response"; }
 };
 
 struct SayParam
@@ -117,15 +117,15 @@ struct SayParam
 		lang_unset
 	};
 
-	static _constexpr char const* const voice2string[3] 
-#if !no_constexpr
+	static constexpr char const* const voice2string[3] 
+#if !noconstexpr
 	  = {
 		  "man", "woman", "alice"
     }
 #endif
   ;
-	static _constexpr char const* const language2string[5] 
-#if !no_constexpr
+	static constexpr char const* const language2string[5] 
+#if !noconstexpr
 	  = {
 		  "fr_FR", "da_DK", "de_DE", "en_US", "ru_RU"
 		}
@@ -133,16 +133,16 @@ struct SayParam
 	;
 };
 
-_constexpr char const* const SayParam::voice2string[3]
-#if no_constexpr
+constexpr char const* const SayParam::voice2string[3]
+#if noconstexpr
 	  = {
 		  "man", "woman", "alice"
     }
 #endif
 ;
 
-_constexpr char const* const SayParam::language2string[5]
-#if no_constexpr
+constexpr char const* const SayParam::language2string[5]
+#if noconstexpr
 	  = {
 		  "fr_FR", "da_DK", "de_DE", "en_US", "ru_RU"
 		}
@@ -172,29 +172,29 @@ public:
   template <unsigned int _Voice>
   using setVoice = typename Say::template Set<2, _Voice>;
 
-  _constexpr unsigned int getLoop () const noexcept
+  constexpr unsigned int getLoop () const noexcept
   { return Say::template Get<0> (); }
 
-  _constexpr language getLanguage () const noexcept
+  constexpr language getLanguage () const noexcept
   { return (language) Say::template Get<1> (); }
 
-  _constexpr voice getVoice () const noexcept
+  constexpr voice getVoice () const noexcept
   { return (voice) Say::template Get<2> (); }
 
-	_constexpr Say (char const* what) noexcept : what_ (what) {}
+	constexpr Say (char const* what) noexcept : what_ (what) {}
 
-	_constexpr char const* name () const noexcept { return "Say"; }
-	_constexpr bool empty () const noexcept { return false; }
+	constexpr char const* name () const noexcept { return "Say"; }
+	constexpr bool empty () const noexcept { return false; }
 
   template <class Ch, class Tr>
-  _constexpr std::basic_ostream<Ch,Tr>&
+  constexpr std::basic_ostream<Ch,Tr>&
   print_attrs (std::basic_ostream<Ch,Tr>& os) const
   {
   	return print_loop (print_language (print_voice (os)));
   }
 
   template <class Ch, class Tr>
-  _constexpr std::basic_ostream<Ch,Tr>&
+  constexpr std::basic_ostream<Ch,Tr>&
   print_content (std::basic_ostream<Ch,Tr>& os) const
   {
   	return os << what_;
@@ -202,14 +202,14 @@ public:
 
 protected:
   template <class Ch, class Tr>
-  _constexpr std::basic_ostream<Ch,Tr>&
+  constexpr std::basic_ostream<Ch,Tr>&
   print_loop (std::basic_ostream<Ch,Tr>& os) const
   {
   	return (getLoop () > 1 ? os << " loop=\"" << getLoop () << "\"" : os);
   }
 
   template <class Ch, class Tr>
-  _constexpr std::basic_ostream<Ch,Tr>&
+  constexpr std::basic_ostream<Ch,Tr>&
   print_language (std::basic_ostream<Ch,Tr>& os) const
   {
   	return (getLanguage () == lang_unset ? os :
@@ -217,7 +217,7 @@ protected:
   }
 
   template <class Ch, class Tr>
-  _constexpr std::basic_ostream<Ch,Tr>&
+  constexpr std::basic_ostream<Ch,Tr>&
   print_voice (std::basic_ostream<Ch,Tr>& os) const
   {
   	return (getVoice () == voice_unset ? os :
@@ -239,22 +239,22 @@ public:
   template <unsigned int _Loop>
   using setLoop = typename Play::template Set<0, _Loop>;
 
-  _constexpr unsigned int getLoop () const noexcept
+  constexpr unsigned int getLoop () const noexcept
   { return Play::template Get<0> (); }
 
-	_constexpr Play (char const* url) noexcept : url_ (url) {}
-	_constexpr char const* name () const noexcept { return "Play"; }
-	_constexpr bool empty () const noexcept { return false; }
+	constexpr Play (char const* url) noexcept : url_ (url) {}
+	constexpr char const* name () const noexcept { return "Play"; }
+	constexpr bool empty () const noexcept { return false; }
 
   template <class Ch, class Tr>
-  _constexpr std::basic_ostream<Ch,Tr>&
+  constexpr std::basic_ostream<Ch,Tr>&
   print_attrs (std::basic_ostream<Ch,Tr>& os) const
   {
   	return print_loop (os);
   }
 
   template <class Ch, class Tr>
-  _constexpr std::basic_ostream<Ch,Tr>&
+  constexpr std::basic_ostream<Ch,Tr>&
   print_content (std::basic_ostream<Ch,Tr>& os) const
   {
   	return os << url_;
@@ -262,7 +262,7 @@ public:
 
 protected:
   template <class Ch, class Tr>
-  _constexpr std::basic_ostream<Ch,Tr>&
+  constexpr std::basic_ostream<Ch,Tr>&
   print_loop (std::basic_ostream<Ch,Tr>& os) const
   {
   	return (getLoop () > 1 ? os << " loop=\"" << getLoop () << "\"" : os);
@@ -281,14 +281,14 @@ public:
   template <unsigned int _Length>
   using setLength = typename Pause::template Set<0, _Length>;
 
-  _constexpr unsigned int getLength () const noexcept
+  constexpr unsigned int getLength () const noexcept
   { return Pause::template Get<0> (); }
 
-	_constexpr Pause () noexcept {}
-	_constexpr char const* name () const noexcept { return "Pause"; }
+	constexpr Pause () noexcept {}
+	constexpr char const* name () const noexcept { return "Pause"; }
 
   template <class Ch, class Tr>
-  _constexpr std::basic_ostream<Ch,Tr>&
+  constexpr std::basic_ostream<Ch,Tr>&
   print_attrs (std::basic_ostream<Ch,Tr>& os) const
   {
   	return (getLength () > 1 ? os << " length=\"" << getLength () << "\"" : os);
@@ -299,8 +299,8 @@ struct GatherParam
 {
 	enum method { GET, POST };
 
-	static _constexpr char const* const method2string[2]
-#if !no_constexpr
+	static constexpr char const* const method2string[2]
+#if !noconstexpr
 		= {
 		  "GET", "POST"
 		}
@@ -308,8 +308,8 @@ struct GatherParam
 	;
 };
 
-_constexpr char const* const GatherParam::method2string[2]
-#if no_constexpr
+constexpr char const* const GatherParam::method2string[2]
+#if noconstexpr
 		= {
 		  "GET", "POST"
 		}
@@ -334,39 +334,39 @@ public:
   template <unsigned int _Method>
   using setMethod = typename Gather::template Set<0, _Method>;
 
-  _constexpr unsigned int getMethod () const noexcept
+  constexpr unsigned int getMethod () const noexcept
   { return Gather::template Get<0> (); }
 
   template <unsigned int _Timeout>
   using setTimeout = typename Gather::template Set<1, _Timeout>;
 
-  _constexpr unsigned int getTimeout () const noexcept
+  constexpr unsigned int getTimeout () const noexcept
   { return Gather::template Get<1> (); }
 
   template <unsigned int _FinishOnKey>
   using setFinishOnKey = typename Gather::template Set<2, _FinishOnKey>;
 
-  _constexpr unsigned int getFinishOnKey () const noexcept
+  constexpr unsigned int getFinishOnKey () const noexcept
   { return Gather::template Get<2> (); }
 
   template <unsigned int _NumDigits>
   using setNumDigits = typename Gather::template Set<3, _NumDigits>;
 
-  _constexpr unsigned int getNumDigits () const noexcept
+  constexpr unsigned int getNumDigits () const noexcept
   { return Gather::template Get<3> (); }
 
-	_constexpr Gather (not_empty<Gather> const& x) noexcept 
+	constexpr Gather (not_empty<Gather> const& x) noexcept 
 	  : base<Gather> (false)
 	  , action_ (x.action_)
 	{}
 
-	_constexpr Gather (char const* action = nullptr) : action_ {action} {}
+	constexpr Gather (char const* action = nullptr) : action_ {action} {}
 
-	_constexpr Gather () noexcept {}
-	_constexpr char const* name () const noexcept { return "Gather"; }
+	constexpr Gather () noexcept {}
+	constexpr char const* name () const noexcept { return "Gather"; }
 
   template <class Ch, class Tr>
-  _constexpr std::basic_ostream<Ch,Tr>&
+  constexpr std::basic_ostream<Ch,Tr>&
   print_attrs (std::basic_ostream<Ch,Tr>& os) const
   {
   	return print_num_digits (
@@ -378,7 +378,7 @@ public:
 
 protected:
   template <class Ch, class Tr>
-  _constexpr std::basic_ostream<Ch,Tr>&
+  constexpr std::basic_ostream<Ch,Tr>&
   print_action (std::basic_ostream<Ch,Tr>& os) const
   {
   	return (! action_ ? os << "XXX" :
@@ -386,7 +386,7 @@ protected:
   }
 
   template <class Ch, class Tr>
-  _constexpr std::basic_ostream<Ch,Tr>&
+  constexpr std::basic_ostream<Ch,Tr>&
   print_timeout (std::basic_ostream<Ch,Tr>& os) const
   {
   	return (getTimeout () == 5 ? os :
@@ -394,7 +394,7 @@ protected:
   }
 
   template <class Ch, class Tr>
-  _constexpr std::basic_ostream<Ch,Tr>&
+  constexpr std::basic_ostream<Ch,Tr>&
   print_finish_on_key (std::basic_ostream<Ch,Tr>& os) const
   {
   	return (getFinishOnKey () == '#' ? os :
@@ -402,7 +402,7 @@ protected:
   }
 
   template <class Ch, class Tr>
-  _constexpr std::basic_ostream<Ch,Tr>&
+  constexpr std::basic_ostream<Ch,Tr>&
   print_num_digits (std::basic_ostream<Ch,Tr>& os) const
   {
   	return (getNumDigits () == 0 ? os :
@@ -410,7 +410,7 @@ protected:
   }
 
   template <class Ch, class Tr>
-  _constexpr std::basic_ostream<Ch,Tr>&
+  constexpr std::basic_ostream<Ch,Tr>&
   print_method (std::basic_ostream<Ch,Tr>& os) const
   {
   	return (getMethod () == POST ? os :
@@ -422,7 +422,7 @@ protected:
 } // namespace verbs
 
 template <typename... Ts>
-_constexpr verbs::Response Response (Ts&&... ts)
+constexpr verbs::Response Response (Ts&&... ts)
 {
 	return verbs::Response (std::forward<Ts> (ts)...);
 }

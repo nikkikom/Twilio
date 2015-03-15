@@ -42,7 +42,7 @@ struct field
 template <unsigned char... uchars>
 struct packed_storage
 {
-    _constexpr packed_storage() noexcept : data {uchars...} {}
+    constexpr packed_storage() noexcept : data {uchars...} {}
     const unsigned char data[sizeof...(uchars)]; 
 };
 
@@ -206,7 +206,7 @@ public:
 template <template <typename... Fields> class HostType, typename... Fields>
 struct const_obj : public pack_field_list<Fields...>::template result<>
 {
-    _constexpr const_obj() {}
+    constexpr const_obj() {}
     
     template <unsigned int K, 
         typename get_field_type<K, 0, Fields...>::result newValue
@@ -217,7 +217,7 @@ struct const_obj : public pack_field_list<Fields...>::template result<>
       ::template result<>;
     
     template <unsigned int K>
-    _constexpr typename get_field_type<K, 0, Fields...>::result 
+    constexpr typename get_field_type<K, 0, Fields...>::result 
     Get() const noexcept
     {
         return get_field_value<K, 0, Fields...>::result;
