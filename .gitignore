@@ -26,3 +26,13 @@
 *.exe
 *.out
 *.app
+
+ThirdParty/
+build/
+*.swp
+*.swo
+*.h-
+CMakeFiles/
+Makefile
+CMakeCache.txt
+tests/main-test
