@@ -1,5 +1,6 @@
 # twilio
-Twilio C++11/14 API bt Nikita Chumakov <nikkikom@gmail.com>
+Twilio C++11/14 API 
+by Nikita Chumakov &lt;nikkikom@gmail.com&gt;
 
 Simplifies the generating TwiML rules, can be used in http servers. The simple
 server (based on cpp-netlib) provided in tests directory.
