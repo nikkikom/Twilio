@@ -9,10 +9,10 @@ API is header-only library. The classes resides in "twilio::ml" namespace. We
 are going to use this namespace in the rest of the code: "using namespace
 twilio::ml;".
 
-The generating of ML responses can be acompletished with std::ostream-s ans very
-simple:
+The generating of ML responses can be accomplished with std::ostream-s and is
+very simple:
 
-  using namespace twilio::ml;
+  using namespace twilio::ml;<br>
   std::cout &lt;&lt; (
     Response () 
       &lt;&lt; Play ("http://domain.com/smth.mp3")
