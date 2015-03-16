@@ -5,18 +5,6 @@
 
 #define LogTrace(x...) fprintf (stderr, x)
 
-using namespace twilio::ml;
-constexpr auto const resp = Response () <<
-    ( Gather::setTimeout<6> ("action")
-         << Say::setLoop <10>
-              ::setVoice <Say::woman> ("qwerty")
-         << Pause::setLength <10> ()
-         << Play::setLoop <2> ("http://com/m.mp3")
-    )
-    << Say ("hi")
-    << Play ("http://url/m.mp3")
-;
-
 #include <boost/network/protocol/http/server.hpp>
 #include <string>
 #include <iostream>
@@ -64,7 +52,7 @@ struct connection : std::enable_shared_from_this<connection>
       }
     }
 
-		LogTrace ("content-length = %ld\n", cl);
+		// LogTrace ("content-length = %ld\n", cl);
 
     read_sofar = 0;
 
@@ -113,16 +101,31 @@ struct Server
   	(*std::make_shared<connection> (request, conn)) ();
 
   	http_server::response_header headers[] = { 
-  	  {"Connection","close"} ,{"Content-Type", "text/plain"} };
+  	  {"Connection","close"} ,{"Content-Type", "text/xml"} };
 
   	conn->set_status(http_server::connection::ok);
   	conn->set_headers(boost::make_iterator_range(headers, headers+2));
-  	conn->write("helloworld\n");
+
+    // by now predefine the single response
+	  using namespace twilio::ml;
+    constexpr auto const resp = Response () <<
+      ( Gather::setTimeout<6> ("action")
+           << Say::setLoop <10>
+                ::setVoice <Say::woman> ("qwerty")
+           << Pause::setLength <10> ()
+           << Play::setLoop <2> ("http://com/m.mp3")
+      )
+      << Say ("hi")
+      << Play ("http://url/m.mp3")
+    ; 
+
+    std::stringstream os; 
+    os << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" << resp << "\n";
+  	conn->write(os.str ());
   }
 };
 
 int main(int arg, char * argv[]) {
-	std::cout << resp << "\n";
     Server serv;
     http_server::options options(serv);
     http_server server(
