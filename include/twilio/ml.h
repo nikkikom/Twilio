@@ -69,7 +69,7 @@ operator<< (Node<Outer, Tuple> const& node, Verb const& verb)
 	static_assert (detail::is_tuple<Tuple>::value, "Tuple must be std::tuple");
 
 	static_assert (verbs::is_nestable<Outer, Verb>::value, 
-	    "Cannot nest under this outer verb");
+	    "Nesting rules violation: Verb cannot be nested under Outer");
 
   return make_node (node.load (), node.value (), verb);
 }
@@ -94,7 +94,7 @@ constexpr Outer const&
 operator<< (Outer const& o, Inner const&)
 {
 	static_assert (verbs::is_nestable<Outer, Inner>::value, 
-	    "Cannot nest under this verb");
+	    "Nesting rules violation: Inner cannot be nested under Outer");
 	return o;
 }
 
