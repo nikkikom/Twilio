@@ -5,9 +5,12 @@
 #include <twilio/ml/traits.h>
 #include <twilio/detail/is_tuple.h>
 #include <twilio/detail/print_tuple.h>
+#include <twilio/detail/compat.h>
 
 namespace twilio {
 namespace ml {
+
+using namespace ::twilio::compat;
 
 template <typename Load, typename Tuple>
 class Node
@@ -47,9 +50,8 @@ constexpr auto make_node (Load const& load, Tuple&& tuple, T&&... t)
   -> Node<Load, decltype (std::tuple_cat (std::forward<Tuple> (tuple), 
       std::make_tuple (std::forward<T> (t)...)))>
 {
-	typedef typename std::decay<Tuple>::type TTuple;
-
-	static_assert (detail::is_tuple<TTuple>::value, "Tuple must be std::tuple");
+	static_assert (detail::is_tuple<decay_t<Tuple>>::value, 
+	    "Tuple must be std::tuple");
 
 	return Node<Load, decltype (std::tuple_cat (std::forward<Tuple> (tuple),
       std::make_tuple (std::forward<T> (t)...)))> (load, 
@@ -57,20 +59,25 @@ constexpr auto make_node (Load const& load, Tuple&& tuple, T&&... t)
           std::make_tuple (std::forward<T> (t)...)));
 }
 
-template <class Load, class Tuple, class Leaf
-  , class = typename std::enable_if<is_leaf<Leaf>::value>::type
+template <class Outer, class Tuple, class Verb
+  , class = enable_if_t<is_verb<Verb>::value>
 >
 constexpr auto
-operator<< (Node<Load, Tuple> const& node, Leaf const& leaf) 
-  -> decltype (make_node (node.load (), node.value (), leaf))
+operator<< (Node<Outer, Tuple> const& node, Verb const& verb)
+  -> decltype (make_node (node.load (), node.value (), verb))
 {
 	static_assert (detail::is_tuple<Tuple>::value, "Tuple must be std::tuple");
-  return make_node (node.load (), node.value (), leaf);
+
+	static_assert (verbs::is_nestable<Outer, Verb>::value, 
+	    "Cannot nest under this outer verb");
+
+  return make_node (node.load (), node.value (), verb);
 }
 
 template <class N, class L
-  , class = typename std::enable_if<is_node<N>::value>::type
-  , class = typename std::enable_if<is_leaf<L>::value>::type
+  , class = enable_if_t<is_verb<N>::value>
+  , class = enable_if_t<is_verb<L>::value>
+  , class = enable_if_t<verbs::is_nestable<N,L>::value>
 >
 constexpr Node<N, std::tuple<L>>
 operator<< (N const& node, L const& leaf)
@@ -78,20 +85,21 @@ operator<< (N const& node, L const& leaf)
   return Node<N, std::tuple<L>> (node, std::tuple<L> (leaf));
 }
 
-template <class Leaf, class T
-  , class = typename std::enable_if<
-      is_leaf<Leaf>::value && ! is_node<Leaf>::value
-    >::type
+template <class Outer, class Inner
+  , class = enable_if_t<is_verb<Outer>::value>
+  , class = enable_if_t<is_verb<Inner>::value>
+  , class = enable_if_t<! verbs::is_nestable<Outer, Inner>::value>
 >
-constexpr Leaf const& 
-operator<< (Leaf const& l, T const&)
+constexpr Outer const& 
+operator<< (Outer const& o, Inner const&)
 {
-	static_assert (is_node<Leaf>::value, "Cannot nest under this verb");
-	return l;
+	static_assert (verbs::is_nestable<Outer, Inner>::value, 
+	    "Cannot nest under this verb");
+	return o;
 }
 
 template <class Root, class Load, class Tuple
-  , class = typename std::enable_if<is_node<Root>::value>::type
+  , class = enable_if_t<is_verb<Root>::value>
 >
 constexpr auto
 operator<< (Root const& root, Node<Load, Tuple> const& node)

@@ -6,9 +6,12 @@
 
 #include <twilio/ml/traits.h>
 #include <twilio/detail/named_args.h>
+#include <twilio/detail/compat.h>
 
 namespace twilio {
 namespace ml {
+using namespace ::twilio::compat;
+
 namespace verbs {
 
 template <class Derived>
@@ -84,25 +87,30 @@ struct not_empty: public Base
 };
 
 template <class Base>
-constexpr not_empty<typename std::decay<Base>::type>
+constexpr not_empty<decay_t<Base>>
 set_not_empty (Base&& base)
 {
-	typedef typename std::decay<Base>::type _Base;
-	static_assert (is_leaf<_Base>::value, "argument should be Verb");
+	typedef decay_t<Base> _Base;
+	static_assert (is_verb<_Base>::value, "argument should be Verb");
 
 	return not_empty<_Base> (std::forward<Base> (base)); 
 }
 
-struct Response: base<Response>, node_tag
+struct Response: base<Response>, verb_tag
 {
-	constexpr Response (not_empty<Response> const& x) noexcept 
+	constexpr explicit Response (not_empty<Response> const& x) noexcept 
 	  : base<Response> (false) {}
 
-	constexpr Response (bool empty = true) noexcept : base<Response> (empty) 
+	constexpr explicit Response (bool empty = true) noexcept 
+	  : base<Response> (empty) 
 	{}
 
 	constexpr char const* name () const noexcept { return "Response"; }
 };
+
+// Any verb can be nested under Response verb
+template <class T>
+struct is_nestable<Response, T> : std::true_type {};
 
 struct SayParam
 {
@@ -157,7 +165,7 @@ template <
 class Say
   : public base<Say<Loop, Language,Voice>>
   , public nargs::const_obj<Say, Loop, Language, Voice>
-  , public leaf_tag
+  , public verb_tag
   , public SayParam
 {
 	char const* what_;
@@ -181,7 +189,7 @@ public:
   constexpr voice getVoice () const noexcept
   { return (voice) Say::template Get<2> (); }
 
-	constexpr Say (char const* what) noexcept : what_ (what) {}
+	constexpr explicit Say (char const* what) noexcept : what_ (what) {}
 
 	constexpr char const* name () const noexcept { return "Say"; }
 	constexpr bool empty () const noexcept { return false; }
@@ -231,7 +239,7 @@ template <
 class Play
   : public base<Play<Loop>>
   , public nargs::const_obj<Play, Loop>
-  , public leaf_tag
+  , public verb_tag
 {
 	char const* url_;
 
@@ -242,7 +250,7 @@ public:
   constexpr unsigned int getLoop () const noexcept
   { return Play::template Get<0> (); }
 
-	constexpr Play (char const* url) noexcept : url_ (url) {}
+	constexpr explicit Play (char const* url) noexcept : url_ (url) {}
 	constexpr char const* name () const noexcept { return "Play"; }
 	constexpr bool empty () const noexcept { return false; }
 
@@ -275,7 +283,7 @@ template <
  class Pause
   : public base<Pause<Length>>
   , public nargs::const_obj<Pause, Length>
-  , public leaf_tag
+  , public verb_tag
 {
 public:
   template <unsigned int _Length>
@@ -295,7 +303,7 @@ public:
   }
 };
 
-struct GatherParam
+struct MethodParam
 {
 	enum method { GET, POST };
 
@@ -308,7 +316,7 @@ struct GatherParam
 	;
 };
 
-constexpr char const* const GatherParam::method2string[2]
+constexpr char const* const MethodParam::method2string[2]
 #if noconstexpr
 		= {
 		  "GET", "POST"
@@ -317,7 +325,54 @@ constexpr char const* const GatherParam::method2string[2]
 ;
 
 template <
-    typename Method = nargs::field<int, GatherParam::POST>
+    typename Method = nargs::field<int, MethodParam::POST>
+>
+class Redirect
+  : public base<Redirect<Method>>
+  , public nargs::const_obj<Redirect, Method>
+  , public verb_tag
+  , public MethodParam
+{
+	char const* url_;
+
+public:
+  template <unsigned int _Method>
+  using setMethod = typename Redirect::template Set<0, _Method>;
+
+  constexpr unsigned int getMethod () const noexcept
+  { return Redirect::template Get<0> (); }
+
+	constexpr explicit Redirect (char const* url) noexcept : url_ {url} {}
+	constexpr char const* name () const noexcept { return "Redirect"; }
+	constexpr bool empty () const noexcept { return false; }
+
+  template <class Ch, class Tr>
+  constexpr std::basic_ostream<Ch,Tr>&
+  print_attrs (std::basic_ostream<Ch,Tr>& os) const
+  {
+  	return print_method (
+  	       print_url (os));
+  }
+
+  template <class Ch, class Tr>
+  constexpr std::basic_ostream<Ch,Tr>&
+  print_content (std::basic_ostream<Ch,Tr>& os) const
+  {
+  	return os << url_;
+  }
+
+protected:
+  template <class Ch, class Tr>
+  constexpr std::basic_ostream<Ch,Tr>&
+  print_method (std::basic_ostream<Ch,Tr>& os) const
+  {
+  	return (getMethod () == POST ? os :
+  	  os << " method=\"" << method2string[getMethod ()] << "\"");
+  }
+}; // Redirect
+
+template <
+    typename Method = nargs::field<int, MethodParam::POST>
   , typename Timeout = nargs::field<unsigned int, 5>
   , typename FinishOnKey = nargs::field<char, '#'>
   , typename NumDigits = nargs::field<int, 0>
@@ -325,8 +380,8 @@ template <
 class Gather
   : public base<Gather<Method, Timeout, FinishOnKey, NumDigits>>
   , public nargs::const_obj<Gather, Method, Timeout, FinishOnKey, NumDigits>
-  , public node_tag
-  , public GatherParam
+  , public verb_tag
+  , public MethodParam
 {
 	char const* action_;
 
@@ -360,7 +415,7 @@ public:
 	  , action_ (x.action_)
 	{}
 
-	constexpr Gather (char const* action = nullptr) : action_ {action} {}
+	constexpr Gather (char const* action = nullptr) noexcept : action_ {action} {}
 
 	constexpr Gather () noexcept {}
 	constexpr char const* name () const noexcept { return "Gather"; }
@@ -416,8 +471,28 @@ protected:
   	return (getMethod () == POST ? os :
   	  os << " method=\"" << method2string[getMethod ()] << "\"");
   }
+}; // Gather
 
-};
+// Say and Play verbs can be nested under Gather
+template <class Method, class Timeout, class Finish, class Digits,
+          class Loop, class Lang, class Voice>
+struct is_nestable<
+    Gather<Method,Timeout,Finish,Digits>
+  , Say<Loop,Lang,Voice>
+> : std::true_type {};
+
+template <class Method, class Timeout, class Finish, class Digits, class Loop>
+struct is_nestable<
+    Gather<Method,Timeout,Finish,Digits>
+  , Play<Loop>
+> : std::true_type {};
+
+template <class Method, class Timeout, class Finish, class Digits, class Len>
+struct is_nestable<
+    Gather<Method,Timeout,Finish,Digits>
+  , Pause<Len>
+> : std::true_type {};
+
 
 } // namespace verbs
 
