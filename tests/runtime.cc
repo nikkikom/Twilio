@@ -7,7 +7,11 @@ int main ()
 {
 	using namespace twilio::ml;
 	std::cout << (
-	  Response () <<
+	  Response () 
+#if 1
+		<< ( Play ("http://domain.com/smth.mp3") << Say ("Hello") )
+#else
+
 	    ( Gather::setTimeout<6> ("action") 
 	         << Say::setLoop <10>
 	              ::setVoice <Say::woman> ("qwerty") 
@@ -16,6 +20,7 @@ int main ()
 	    )
 	    << Say ("hi") 
 	    << Play ("http://url/m.mp3")
+#endif
 	);
 
 	// std::cout << "P:" << detail::is_leaf<verbs::Play<>::setLoop<2>>::value << "\n";
