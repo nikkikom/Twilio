@@ -13,17 +13,17 @@ The generating of ML responses can be acompletished with std::ostream-s ans very
 simple:
 
   using namespace twilio::ml;
-  std::cout << (
+  std::cout &lt;&lt; (
     Response () 
-      << Play ("http://domain.com/smth.mp3")
-      << Say ("Hello")
-  ) << "\n";
+      &lt;&lt; Play ("http://domain.com/smth.mp3")
+      &lt;&lt; Say ("Hello")
+  ) &lt;&lt; "\n";
 
 Output:
-  <Response>
-  <Play>http://domain.com/smth.mp3</Play>
-  <Say>Hello</Say>
-  </Response>
+  &lt;Response&gt;
+  &lt;Play&gt;http://domain.com/smth.mp3&lt;/Play&gt;
+  &lt;Say&gt;Hello&lt;/Say&gt;
+  &lt;/Response&gt;
 
 Please not that parenthesis before Response() call and after Say(...) must
 always be used due to operators precedence rules in C++.
@@ -31,62 +31,62 @@ always be used due to operators precedence rules in C++.
 Nested verbs can be generated with the use of parenthesis. Also I implemented
 named arguments for verbs calls:
 
-  Response () <<
-    ( Gather::setTimeout<6> ("action")
-      << Say::setLoop<10>
-            ::setVoice <Say::woman> 
+  Response () &lt;&lt;
+    ( Gather::setTimeout&lt;6&gt; ("action")
+      &lt;&lt; Say::setLoop&lt;10&gt;
+            ::setVoice &lt;Say::woman&gt; 
             ("Please leave a message after the tone.")
-      << Pause::setLength<10> ()
-      << Play::setLoop<2> ("http://com/m.mp3")
+      &lt;&lt; Pause::setLength&lt;10&gt; ()
+      &lt;&lt; Play::setLoop&lt;2&gt; ("http://com/m.mp3")
     )
-    << Say ("hi");
+    &lt;&lt; Say ("hi");
 
 Output:
-  <Response>
-  <Gather action="action" timeout="6">
-  <Say loop="woman" loop="10">Please leave a message after the tone.</Say>
-  <Pause length="10"/>
-  <Play loop="2">http://com/m.mp3</Play>
-  </Gather>
-  <Say>hi</Say>
-  </Response>
+  &lt;Response&gt;
+  &lt;Gather action="action" timeout="6"&gt;
+  &lt;Say loop="woman" loop="10"&gt;Please leave a message after the tone.&lt;/Say&gt;
+  &lt;Pause length="10"/&gt;
+  &lt;Play loop="2"&gt;http://com/m.mp3&lt;/Play&gt;
+  &lt;/Gather&gt;
+  &lt;Say&gt;hi&lt;/Say&gt;
+  &lt;/Response&gt;
 
 The API checks verb's nesting rules and if you try to nest incompatible vers the library will generate the descriptive error:
 
-  std::cout << (
+  std::cout &lt;&lt; (
     Response () 
-      << ( Play ("http://domain.com/smth.mp3") << Say ("Hello") )
-  ) << "\n";
+      &lt;&lt; ( Play ("http://domain.com/smth.mp3") &lt;&lt; Say ("Hello") )
+  ) &lt;&lt; "\n";
 
 
 In file included from runtime.cc:1:
 ../include/twilio/ml.h:96:2: error: static_assert failed "Nesting rules
       violation: Inner cannot be nested under Outer"
-        static_assert (verbs::is_nestable<Outer, Inner>::value,
+        static_assert (verbs::is_nestable&lt;Outer, Inner&gt;::value,
         ^              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 runtime.cc:12:44: note: in instantiation of function template specialization
-      'twilio::ml::operator<<<twilio::ml::verbs::Play<twilio::nargs::field<unsigned
-      int, 1> >, twilio::ml::verbs::Say<twilio::nargs::field<unsigned int, 1>,
-      twilio::nargs::field<int, 5>, twilio::nargs::field<int, 3> >, void, void,
-      void>' requested here
-                << ( Play ("http://domain.com/smth.mp3") << Say ("Hello") )
+      'twilio::ml::operator&lt;&lt;&lt;twilio::ml::verbs::Play&lt;twilio::nargs::field&lt;unsigned
+      int, 1&gt; &gt;, twilio::ml::verbs::Say&lt;twilio::nargs::field&lt;unsigned int, 1&gt;,
+      twilio::nargs::field&lt;int, 5&gt;, twilio::nargs::field&lt;int, 3&gt; &gt;, void, void,
+      void&gt;' requested here
+                &lt;&lt; ( Play ("http://domain.com/smth.mp3") &lt;&lt; Say ("Hello") )
                                                          ^
 1 error generated. 
 
 
 The API can generate data structure in constant context (during compile time):
 
-  constexpr auto response = Response () <<
-    ( Gather::setTimeout<6> ("action")
-      << Say::setLoop<10>
-            ::setVoice <Say::woman> 
+  constexpr auto response = Response () &lt;&lt;
+    ( Gather::setTimeout&lt;6&gt; ("action")
+      &lt;&lt; Say::setLoop&lt;10&gt;
+            ::setVoice &lt;Say::woman&gt; 
             ("Please leave a message after the tone.")
-      << Pause::setLength<10> ()
-      << Play::setLoop<2> ("http://com/m.mp3")
+      &lt;&lt; Pause::setLength&lt;10&gt; ()
+      &lt;&lt; Play::setLoop&lt;2&gt; ("http://com/m.mp3")
     )
-    << Say ("hi");
+    &lt;&lt; Say ("hi");
 
-    std::cout << response << '\n';
+    std::cout &lt;&lt; response &lt;&lt; '\n';
 
 Due to compiler limitations is not supported on clang in c++11 mode. 
 Clang c++14, g++ c++11, g++ c++14 work fine. Clang c++11 works fine in runtime
