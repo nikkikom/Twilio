@@ -118,14 +118,16 @@ template <class Outer, class Tuple, class Verb
 >
 constexpr auto
 operator<< (Node<Outer, Tuple>&& node, Verb&& verb)
-  -> decltype (make_node (node.load_, node.value_, std::forward<Verb> (verb)))
+  -> decltype (make_node (std::move (node.load_), std::move (node.value_), 
+        std::forward<Verb> (verb)))
 {
 	static_assert (detail::is_tuple<Tuple>::value, "Tuple must be std::tuple");
 
 	static_assert (verbs::is_nestable<Outer, Verb>::value, 
 	    "Nesting rules violation: Verb cannot be nested under Outer");
 
-  return make_node (node.load_, node.value_, std::forward<Verb> (verb));
+  return make_node (std::move (node.load_), std::move (node.value_), 
+        std::forward<Verb> (verb));
 }
 
 /// Composes outer and inner (nested) verbs into the Node object.
