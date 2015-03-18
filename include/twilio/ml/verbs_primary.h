@@ -14,14 +14,17 @@ using namespace ::twilio::compat;
 
 namespace verbs {
 
+/// Base class for all verbs
 template <class Derived>
-class base
+class base: public verb_tag
 {
 	bool empty_;
 
+  /// Curiously recurring template pattern is here.
 	constexpr Derived const* derived () const noexcept
   { return static_cast<Derived const*> (this); }
-
+  
+  /// Prints verb nodes's prefix, content and suffix.
   template <class Ch, class Tr>
   friend constexpr std::basic_ostream<Ch,Tr>&
   print (std::basic_ostream<Ch,Tr>& os, base const& b)
@@ -31,7 +34,7 @@ class base
   	       b.derived ()->print_begin (os)));
   }
 
-  // This operator should not be called, an error will always be triggered.
+  /// This operator should not be called, an error will always be triggered.
   template <class Ch, class Tr>
   friend constexpr std::basic_ostream<Ch,Tr>&
   operator<< (std::basic_ostream<Ch,Tr>& os, base const& b)
@@ -44,8 +47,12 @@ class base
 public:
   constexpr base (bool empty = true) noexcept : empty_ (empty) {}
 
+  /// Returs true if the verb has nouns.
+  // Non-empty status changes the way of how start and end tags will be printed.
 	constexpr bool empty () const noexcept { return empty_; }
 
+  
+  /// Prints the prefix tag.
   template <class Ch, class Tr>
   constexpr std::basic_ostream<Ch,Tr>&
   print_begin (std::basic_ostream<Ch,Tr>& os) const
@@ -54,6 +61,7 @@ public:
   	  << (derived ()->empty () ? "/" : "") << '>';
   }
 
+  /// Prints the suffix tag.
   template <class Ch, class Tr>
   constexpr std::basic_ostream<Ch,Tr>&
   print_end (std::basic_ostream<Ch,Tr>& os) const
@@ -62,6 +70,7 @@ public:
   	          os << '<' << '/' << derived ()->name () << '>';
   }
 
+  /// Prints the verbs attributes.
   template <class Ch, class Tr>
   constexpr std::basic_ostream<Ch,Tr>&
   print_attrs (std::basic_ostream<Ch,Tr>& os) const noexcept
@@ -69,6 +78,7 @@ public:
   	return os;
   }
 
+  /// Prints the content.
   template <class Ch, class Tr>
   constexpr std::basic_ostream<Ch,Tr>&
   print_content (std::basic_ostream<Ch,Tr>& os) const noexcept
@@ -78,6 +88,7 @@ public:
 
 };
 
+/// Class wrapper that makes "non-empty" verb from "empty" one.
 template <class Base>
 struct not_empty: public Base 
 {
@@ -96,25 +107,33 @@ set_not_empty (Base&& base)
 	return not_empty<_Base> (std::forward<Base> (base)); 
 }
 
-struct Response: base<Response>, verb_tag
+/// Response verb.
+struct Response: base<Response>
 {
+	/// Constructs "non-empty" response.
 	constexpr explicit Response (not_empty<Response> const& x) noexcept 
 	  : base<Response> (false) {}
 
+  /// Constructs default response.
 	constexpr explicit Response (bool empty = true) noexcept 
 	  : base<Response> (empty) 
 	{}
 
+  /// The tag name.
 	constexpr char const* name () const noexcept { return "Response"; }
 };
 
-// Any verb can be nested under Response verb
+/// Any verb can be nested under Response verb
 template <class T>
 struct is_nestable<Response, T> : std::true_type {};
 
+/// Optional parameters for the Say verb.
 struct SayParam
 {
+	/// Type of the voice.
 	enum voice { man, woman, alice, voice_unset };
+
+  /// Message language.
 	enum language {
 		fr_FR,
 		da_DK,
@@ -157,6 +176,7 @@ constexpr char const* const SayParam::language2string[5]
 #endif
 ;
 
+/// Say verb.
 template <
     typename Loop = nargs::field<unsigned int, 1>
   , typename Language = nargs::field<int, SayParam::lang_unset>
@@ -165,7 +185,6 @@ template <
 class Say
   : public base<Say<Loop, Language,Voice>>
   , public nargs::const_obj<Say, Loop, Language, Voice>
-  , public verb_tag
   , public SayParam
 {
 	char const* what_;
@@ -239,7 +258,6 @@ template <
 class Play
   : public base<Play<Loop>>
   , public nargs::const_obj<Play, Loop>
-  , public verb_tag
 {
 	char const* url_;
 
@@ -283,7 +301,6 @@ template <
  class Pause
   : public base<Pause<Length>>
   , public nargs::const_obj<Pause, Length>
-  , public verb_tag
 {
 public:
   template <unsigned int _Length>
@@ -330,7 +347,6 @@ template <
 class Redirect
   : public base<Redirect<Method>>
   , public nargs::const_obj<Redirect, Method>
-  , public verb_tag
   , public MethodParam
 {
 	char const* url_;
@@ -380,7 +396,6 @@ template <
 class Gather
   : public base<Gather<Method, Timeout, FinishOnKey, NumDigits>>
   , public nargs::const_obj<Gather, Method, Timeout, FinishOnKey, NumDigits>
-  , public verb_tag
   , public MethodParam
 {
 	char const* action_;
