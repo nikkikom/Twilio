@@ -45,7 +45,7 @@ class base: public verb_tag
   }
 
 public:
-  constexpr base (bool empty = true) noexcept : empty_ (empty) {}
+  constexpr base (bool empty = true) noexcept : empty_ {empty} {}
 
   /// Returs true if the verb has nouns.
   // Non-empty status changes the way of how start and end tags will be printed.
@@ -93,8 +93,8 @@ template <class Base>
 struct not_empty: public Base 
 {
   using Base::Base;
-  constexpr not_empty (Base const& base) : Base (base) {}
-  constexpr not_empty (Base && base) : Base (std::move (base)) {}
+  constexpr not_empty (Base const& base) : Base { base             } {}
+  constexpr not_empty (Base     && base) : Base { std::move (base) } {}
 };
 
 template <class Base>
@@ -104,7 +104,7 @@ set_not_empty (Base&& base)
 	typedef decay_t<Base> _Base;
 	static_assert (is_verb<_Base>::value, "argument should be Verb");
 
-	return not_empty<_Base> (std::forward<Base> (base)); 
+	return not_empty<_Base> { std::forward<Base> (base) }; 
 }
 
 /// Response verb.
@@ -112,11 +112,12 @@ struct Response: base<Response>
 {
 	/// Constructs "non-empty" response.
 	constexpr explicit Response (not_empty<Response> const& x) noexcept 
-	  : base<Response> (false) {}
+	  : base<Response> {false} 
+	{}
 
   /// Constructs default response.
 	constexpr explicit Response (bool empty = true) noexcept 
-	  : base<Response> (empty) 
+	  : base<Response> {empty} 
 	{}
 
   /// The tag name.
@@ -208,7 +209,7 @@ public:
   constexpr voice getVoice () const noexcept
   { return (voice) Say::template Get<2> (); }
 
-	constexpr explicit Say (char const* what) noexcept : what_ (what) {}
+	constexpr explicit Say (char const* what) noexcept : what_ {what} {}
 
 	constexpr char const* name () const noexcept { return "Say"; }
 	constexpr bool empty () const noexcept { return false; }
@@ -268,7 +269,7 @@ public:
   constexpr unsigned int getLoop () const noexcept
   { return Play::template Get<0> (); }
 
-	constexpr explicit Play (char const* url) noexcept : url_ (url) {}
+	constexpr explicit Play (char const* url) noexcept : url_ {url} {}
 	constexpr char const* name () const noexcept { return "Play"; }
 	constexpr bool empty () const noexcept { return false; }
 
@@ -426,8 +427,8 @@ public:
   { return Gather::template Get<3> (); }
 
 	constexpr Gather (not_empty<Gather> const& x) noexcept 
-	  : base<Gather> (false)
-	  , action_ (x.action_)
+	  : base<Gather> {false}
+	  , action_ {x.action_}
 	{}
 
 	constexpr Gather (char const* action = nullptr) noexcept : action_ {action} {}
@@ -514,7 +515,7 @@ struct is_nestable<
 template <typename... Ts>
 constexpr verbs::Response Response (Ts&&... ts)
 {
-	return verbs::Response (std::forward<Ts> (ts)...);
+	return verbs::Response {std::forward<Ts> (ts)...};
 }
 
 using Say = verbs::Say<>;

@@ -90,18 +90,18 @@ public:
  */
 template <typename Load, typename Tuple, typename... Verbs>
 constexpr auto make_node (Load&& load, Tuple&& tuple, Verbs&&... verbs)
-  -> Node<decay_t<Load>, decltype (std::tuple_cat (std::forward<Tuple> (tuple), 
-      std::make_tuple (std::forward<Verbs> (verbs)...)))>
 {
 	static_assert (detail::is_tuple<decay_t<Tuple>>::value, 
 	    "Tuple must be a std::tuple type");
 
 	return Node<decay_t<Load>, decltype (
 	  std::tuple_cat (std::forward<Tuple> (tuple),
-      std::make_tuple (std::forward<Verbs> (verbs)...)))> (
-        std::forward<Load> (load), 
-          std::tuple_cat (std::forward<Tuple> (tuple), 
-            std::make_tuple (std::forward<Verbs> (verbs)...)));
+      std::make_tuple (std::forward<Verbs> (verbs)...)))> 
+  {
+    std::forward<Load> (load), 
+      std::tuple_cat (std::forward<Tuple> (tuple), 
+        std::make_tuple (std::forward<Verbs> (verbs)...))
+  };
 }
 
 /// Appends the verb to the Node.
@@ -115,10 +115,7 @@ constexpr auto make_node (Load&& load, Tuple&& tuple, Verbs&&... verbs)
 template <class Outer, class Tuple, class Verb
   , class = enable_if_t<is_verb<Verb>::value>
 >
-constexpr auto
-operator<< (Node<Outer, Tuple>&& node, Verb&& verb)
-  -> decltype (make_node (std::move (node).release_load (), 
-      std::move (node).release_value (), std::forward<Verb> (verb)))
+constexpr auto operator<< (Node<Outer, Tuple>&& node, Verb&& verb)
 {
 	static_assert (detail::is_tuple<Tuple>::value, "Tuple must be std::tuple");
 
@@ -143,8 +140,9 @@ template <class O, class I
 constexpr Node<decay_t<O>, std::tuple<decay_t<I>>>
 operator<< (O&& outer, I&& inner)
 {
-  return Node<decay_t<O>, std::tuple<decay_t<I>>> (
-    std::forward<O> (outer), std::tuple<I> (std::forward<I> (inner)));
+  return Node<decay_t<O>, std::tuple<decay_t<I>>> {
+    std::forward<O> (outer), std::tuple<I> (std::forward<I> (inner))
+  };
 }
 
 /// Cutoff forbidden verbs nesting.
@@ -178,7 +176,6 @@ template <class Outer, class Load, class Tuple
 >
 constexpr auto
 operator<< (Outer const& outer, Node<Load, Tuple> const& node)
-  -> decltype (make_node (outer, std::make_tuple (node)))
 {
   return make_node (outer, std::make_tuple (node));
 }
@@ -192,8 +189,6 @@ operator<< (Outer const& outer, Node<Load, Tuple> const& node)
 template <class LoadO, class TupleO, class LoadI, class TupleI>
 constexpr auto
 operator<< (Node<LoadO,TupleO> outer, Node<LoadI, TupleI> inner)
-  -> decltype (make_node (std::move (outer).release_load (), 
-      std::move (outer).release_value (), std::move (inner)))
 {
   return make_node (std::move (outer).release_load (), 
       std::move (outer).release_value (), std::move (inner));
