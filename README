@@ -92,14 +92,16 @@ Due to compiler limitations is not supported on clang in c++11 mode.
 Clang c++14, g++ c++11, g++ c++14 work fine. Clang c++11 works fine in runtime
 context.
 
-Compilers tested: 
-  gcc 4.9.2 (c++11 and c++14 modes)
+Compilers tested:
   gcc 5.0.0 20150308
-  clang 3.6.0
-  
+  clang 3.6.0 (C++14 mode)
+
+  gcc 4.9 IS KNOWN TO NOT WORK due to compiler limitations.
+  clang 3.6.0 does not work in C++11 mode due to compiler limitations. 
+
 How to compile the tests:
   c++ -std=c++14 -I ../include -o constexpr constexpr.cc -Wall
-  c++ -std=c++11 -I ../include -o runtime runtime.cc -Wall 
+  c++ -std=c++14 -I ../include -o runtime runtime.cc -Wall 
 
 http servers test example needs the recent boost and cpp-netlib header only 
 library (http://cpp-netlib.org/).

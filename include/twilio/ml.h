@@ -21,7 +21,6 @@ class Node
 	static_assert (detail::is_tuple<Tuple>::value, 
 	  "Tuple type must be a std::tuple");
 
-public:
 	Load load_;
 	Tuple value_;
 
@@ -43,11 +42,11 @@ public:
 
   /// Load getter.
   // @returns const reference to the parent outer verb.
-  constexpr Load  const& load ()  const& noexcept { return load_;  }
+  constexpr Load&&  release_load ()  && noexcept { return std::move (load_);  }
 
   /// Value getter.
   // @returns const reference to the tuple containing inner nested verbs.
-  constexpr Tuple const& value () const& noexcept { return value_; }
+  constexpr Tuple&& release_value () && noexcept { return std::move (value_); }
 
   /// Prints the content of the node into the ostream.
   /**
@@ -118,16 +117,16 @@ template <class Outer, class Tuple, class Verb
 >
 constexpr auto
 operator<< (Node<Outer, Tuple>&& node, Verb&& verb)
-  -> decltype (make_node (std::move (node.load_), std::move (node.value_), 
-        std::forward<Verb> (verb)))
+  -> decltype (make_node (std::move (node).release_load (), 
+      std::move (node).release_value (), std::forward<Verb> (verb)))
 {
 	static_assert (detail::is_tuple<Tuple>::value, "Tuple must be std::tuple");
 
 	static_assert (verbs::is_nestable<Outer, Verb>::value, 
 	    "Nesting rules violation: Verb cannot be nested under Outer");
 
-  return make_node (std::move (node.load_), std::move (node.value_), 
-        std::forward<Verb> (verb));
+  return make_node (std::move (node).release_load (), 
+      std::move (node).release_value (), std::forward<Verb> (verb));
 }
 
 /// Composes outer and inner (nested) verbs into the Node object.
@@ -193,11 +192,11 @@ operator<< (Outer const& outer, Node<Load, Tuple> const& node)
 template <class LoadO, class TupleO, class LoadI, class TupleI>
 constexpr auto
 operator<< (Node<LoadO,TupleO> outer, Node<LoadI, TupleI> inner)
-  -> decltype (make_node (std::move (outer.load_), std::move (outer.value_), 
-        std::move (inner)))
+  -> decltype (make_node (std::move (outer).release_load (), 
+      std::move (outer).release_value (), std::move (inner)))
 {
-  return make_node (std::move (outer.load_), std::move (outer.value_), 
-        std::move (inner));
+  return make_node (std::move (outer).release_load (), 
+      std::move (outer).release_value (), std::move (inner));
 }
 
 } // namespace ml
