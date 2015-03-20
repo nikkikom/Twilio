@@ -113,7 +113,10 @@ library (http://cpp-netlib.org/).
 Bugs and limitations:
 
 1. Due to a lack of time (had only one day to work with library) only a small 
-subset of verbs is implemented. Basically it is not more than proof of concept 
+subset of verbs is implemented. The only supported verbs by now is: 
+Gather, Play, Say, Redirect, Pause, Response.
+
+Basically it is not more than proof of concept 
 that such syntax is possbile and that the generation of data structures in
 constant context is possible.
 
