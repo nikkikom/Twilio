@@ -25,7 +25,7 @@ Output:
   <Say>Hello</Say>
   </Response>
 
-Please not that parenthesis before Response() call and after Say(...) must
+Please note that parenthesis before Response() call and after Say(...) must
 always be used due to operators precedence rules in C++.
 
 Nested verbs can be generated with the use of parenthesis. Also I implemented
